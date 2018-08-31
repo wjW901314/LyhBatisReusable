@@ -1,0 +1,48 @@
+﻿<?xml version="1.0" encoding="UTF-8" ?>
+<sqlMap namespace="User" xmlns="http://ibatis.apache.org/mapping" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" >
+  
+  <alias>
+    <typeAlias alias="User" type="Lyh.MyBatis.Model.User"/>
+  </alias>
+  
+  <resultMaps>
+    <resultMap id="UserResult" class="User">
+      <result property="Id" column="id"/>
+      <result property="UserName" column="UserName"/>
+      <result property="Password" column="Password"/>
+      <result property="Email" column="Email"/>
+    </resultMap>
+  </resultMaps>
+
+  <!--缓存-->
+  <cacheModels>
+    <cacheModel id="UserCache" implementation="LRU">
+      <flushInterval hours="24"/>
+      <property name="CacheSize" value="100"/>
+    </cacheModel>
+  </cacheModels>
+  
+  <statements>
+    <select id="Get" resultMap="UserResult">
+      SELECT *  FROM cdsgus WHERE Id = #Id#
+    </select>
+    <select id="GetByPage" resultMap="UserResult" cacheModel="UserCache">
+      WITH Temp
+      AS
+      (
+      SELECT ROW_NUMBER() OVER(ORDER BY id ASC) as RowIndex, * FROM cdsgus
+      )
+      SELECT * FROM Temp WHERE RowIndex BETWEEN #StartRowIndex# AND #EndRowIndex#
+    </select>
+    <select id="GetCount" cacheModel="UserCache">
+      SELECT COUNT(*) FROM cdsgus
+    </select>
+    <insert id="Insert">
+      INSERT INTO [User](UserName,Password,Email) VALUES(#UserName#,#Password#,#Email#)
+      <selectKey resultClass="int" type="post" property="Id">
+        SELECT @@IDENTITY AS Id
+      </selectKey>
+    </insert>
+  </statements>
+  
+</sqlMap>
